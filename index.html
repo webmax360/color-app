@@ -116,7 +116,7 @@
                 const isComplete = data.colorIndex >= data.totalColors;
                 
                 updateInterface(data.currentColor, data.colorIndex, data.totalColors, isComplete);
-                colorButton.disabled = isComplete;
+               colorButton.disabled = false;
 
             } catch (error) {
                 colorDisplay.textContent = "ERROR: Could not connect to server.";
