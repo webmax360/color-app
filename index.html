@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server-Persisted Color Cycle</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: background-color 0.5s ease;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+
+        .color-display {
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .color-button {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #dc3545;
+            color: white;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s, transform 0.1s;
+            text-transform: uppercase;
+        }
+
+        .color-button:hover:enabled {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .color-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: translateY(0);
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="color-display" id="colorDisplay">Loading...</div>
+    <button class="color-button" id="colorButton" disabled>Color</button>
+    <div class="message" id="message"></div>
+
+    <script>
+        const body = document.body;
+        const colorButton = document.getElementById('colorButton');
+        const colorDisplay = document.getElementById('colorDisplay');
+        const messageDisplay = document.getElementById('message');
+
+        const darkColors = ['black', 'purple', 'blue', 'brown', 'green', 'gray'];
+
+        /**
+         * Applies the color to the interface and updates the messages.
+         */
+        function updateInterface(color, index, total, isComplete) {
+            body.style.backgroundColor = color || 'white';
+            colorDisplay.textContent = (color ? color.toUpperCase() : 'NO COLOR').trim();
+            
+            // Text color logic
+            const textColor = darkColors.includes(color) ? 'white' : '#333';
+            body.style.color = textColor;
+            colorDisplay.style.color = textColor;
+            
+            // Display box background logic
+            colorDisplay.style.backgroundColor = (color === 'white' || color === 'silver') ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.8)';
+            
+            colorButton.disabled = isComplete;
+            
+            if (isComplete) {
+                colorButton.textContent = "Finished!";
+                messageDisplay.textContent = "All 12 unique colors have been displayed! (Server Reset)";
+            } else {
+                colorButton.textContent = "Color";
+                const remaining = total - index;
+                messageDisplay.textContent = remaining > 0 ? `${remaining} color${remaining !== 1 ? 's' : ''} left.` : "Last color!";
+            }
+        }
+
+        /**
+         * Fetches the current state on page load.
+         */
+        async function loadInitialState() {
+            try {
+                const response = await fetch('/api/state');
+                const data = await response.json();
+                
+                // If the cycle is complete, the current color might be undefined.
+                // We use the state's index (which is one more than the last color drawn) 
+                // to check completeness.
+                const isComplete = data.colorIndex >= data.totalColors;
+                
+                updateInterface(data.currentColor, data.colorIndex, data.totalColors, isComplete);
+                colorButton.disabled = isComplete;
+
+            } catch (error) {
+                colorDisplay.textContent = "ERROR: Could not connect to server.";
+                console.error("Error loading state:", error);
+            }
+        }
+
+        /**
+         * Sends a request to the server to draw the next color.
+         */
+        async function generateNextColor() {
+            colorButton.disabled = true; // Prevent double-clicking
+            
+            try {
+                const response = await fetch('/api/next-color', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                updateInterface(data.selectedColor, data.newIndex, data.totalColors, data.isCycleComplete);
+                colorButton.disabled = data.isCycleComplete;
+
+            } catch (error) {
+                console.error("Error drawing next color:", error);
+                colorDisplay.textContent = "ERROR: Try refreshing.";
+                colorButton.disabled = true;
+            }
+        }
+
+        // --- Initialization ---
+        loadInitialState();
+        colorButton.addEventListener('click', generateNextColor);
+    </script>
+
+</body>
+</html>

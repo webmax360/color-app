@@ -1,0 +1,12 @@
+{
+  "name": "server-persisted-color-app",
+  "version": "1.0.0",
+  "description": "A color sequence that persists state across refreshes using a server.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

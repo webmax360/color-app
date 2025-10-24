@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Non-Repeating Color Generator (Final)</title>
+    <style>
+        body {
+            /* Full viewport size, centered content */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: background-color 0.5s ease; /* Smooth transition for color change */
+            font-family: 'Arial', sans-serif;
+            color: #333; /* Default text color */
+        }
+
+        .color-display {
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 300px; 
+            text-align: center;
+        }
+
+        .color-button {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #dc3545;
+            color: white;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s, transform 0.1s;
+            text-transform: uppercase;
+        }
+
+        .color-button:hover:enabled {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .color-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: translateY(0);
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="color-display" id="colorDisplay">Click the button to start the color sequence!</div>
+    <button class="color-button" id="colorButton">Color</button>
+    <div class="message" id="message"></div>
+
+    <script>
+        // The list of 12 allowed colors
+        const masterColorList = [
+            'blue', 'red', 'yellow', 'brown', 'green', 'purple', 
+            'orange', 'white', 'black', 'pink', 'gray', 'silver'
+        ];
+
+        const body = document.body;
+        const colorButton = document.getElementById('colorButton');
+        const colorDisplay = document.getElementById('colorDisplay');
+        const messageDisplay = document.getElementById('message');
+
+        // Working variables
+        let shuffledColors = [];
+        let colorIndex = 0;
+
+        /**
+         * The modern Fisher-Yates (Durstenfeld) shuffle algorithm
+         * Ensures the list is randomly ordered
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+        }
+
+        /**
+         * Initializes the color cycle: shuffles the list and resets the index.
+         */
+        function initializeCycle() {
+            // 1. Copy the master list and shuffle it
+            shuffledColors = [...masterColorList];
+            shuffleArray(shuffledColors);
+            
+            // 2. Reset the index
+            colorIndex = 0;
+            
+            // 3. Clear the initial state
+            messageDisplay.textContent = "";
+        }
+
+        function generateNextColor() {
+            // Check if we have used all colors
+            if (colorIndex >= shuffledColors.length) {
+                // All 12 colors have been displayed!
+                colorButton.textContent = "Finished!";
+                messageDisplay.textContent = "All 12 unique colors have been displayed!";
+                colorButton.disabled = true;
+                return; // Stop the function here
+            }
+
+            // 1. Get the next color from the shuffled list
+            const selectedColor = shuffledColors[colorIndex];
+            
+            // 2. Increment the index for the next click
+            colorIndex++;
+
+            // 3. Apply the selected color to the page background
+            body.style.backgroundColor = selectedColor;
+            colorDisplay.textContent = selectedColor.toUpperCase();
+
+            // 4. Adjust text color for visibility
+            const darkColors = ['black', 'purple', 'blue', 'brown', 'green', 'gray'];
+            const textColor = darkColors.includes(selectedColor) ? 'white' : '#333';
+            
+            body.style.color = textColor;
+            colorDisplay.style.color = textColor;
+            
+            // Adjust the display box background for white/silver backgrounds
+            if (selectedColor === 'white' || selectedColor === 'silver') {
+                 colorDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'; 
+            } else {
+                 colorDisplay.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+            }
+            
+            // Update the message display
+            const remaining = shuffledColors.length - colorIndex;
+            messageDisplay.textContent = remaining > 0 ? `${remaining} color${remaining !== 1 ? 's' : ''} left.` : "Last color!";
+        }
+
+        // --- Execution ---
+        initializeCycle(); // Shuffle the list on page load
+        colorButton.addEventListener('click', generateNextColor); // Start the draw sequence
+    </script>
+
+</body>
+</html>
