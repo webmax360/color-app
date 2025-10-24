@@ -4,7 +4,7 @@ const path = require('path');
 
 const app = express();
 const PORT = 3000;
-const DB_FILE = path.join(__dirname, 'db.json');
+const DB_FILE = path.join(__dirname, 'db_reset_final.json');
 
 // Middleware to parse JSON bodies
 app.use(express.json());
