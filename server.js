@@ -92,7 +92,7 @@ app.post('/api/next-color', async (req, res) => {
     });
 });
 
-// Start the server
+// Force reset to clear the stored state.
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
     console.log(`Open http://localhost:${PORT}/index.html in your browser.`);
